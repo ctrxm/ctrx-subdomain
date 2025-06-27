@@ -31,7 +31,7 @@ if (!$storedLicenseVerification['status']) {
         $_SESSION['status_type'] = 'error';
     } else {
         $sql = "SELECT id, name, password, is_admin FROM users WHERE email = ?";
-        // PERBAIKAN: Menggunakan metode fetch() yang benar sesuai Database.php
+        
         $user = $db->fetch($sql, [$email]);
 
         if ($user) {
