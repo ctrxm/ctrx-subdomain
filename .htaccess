@@ -1,0 +1,10 @@
+# .htaccess (Untuk Apache)
+
+RewriteEngine On
+RewriteBase /
+
+# Hapus ekstensi .php dari URL
+# Hanya jika file .php yang sesuai ada dan bukan direktori
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.*)$ $1.php [L]
