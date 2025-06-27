@@ -1,9 +1,5 @@
 <?php
-// dashboard.php - Versi Gabungan Final (User + Admin)
 
-// =================================================================
-// === INISIALISASI DASAR & MANAJEMEN SESI =========================
-// =================================================================
 require_once __DIR__ . '/autoload.php';
 require_once __DIR__ . '/src/config.php';
 require_once __DIR__ . '/src/session_manager.php'; // Memulai sesi
@@ -12,31 +8,20 @@ use App\Database;
 use App\CloudflareManager;
 use App\LicenseManager;
 
-// =================================================================
-// === GERBANG KEAMANAN & PENENTUAN PERAN ==========================
-// =================================================================
-
-// 1. Proteksi Halaman: Wajib Login untuk semua
 if (!isset($_SESSION['user_id'])) {
-    // Ganti '/login-user' jika nama file login user Anda berbeda
     header('Location: /login-user');
     exit();
 }
 
-// 2. Cek apakah user adalah Admin untuk akses fitur admin
+
 $isAdmin = (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true);
 
-// 3. Tentukan tampilan mana yang akan ditampilkan (user atau admin)
-// Default adalah 'user'. Tampilan admin hanya bisa diakses jika $isAdmin true.
 $view = ($_GET['view'] ?? 'user');
 if ($view === 'admin' && !$isAdmin) {
-    $view = 'user'; // Paksa kembali ke tampilan user jika coba akses ilegal
+    $view = 'user'; 
 }
 
 
-// =================================================================
-// === LOGIKA PENGAMBILAN DATA (SESUAI TAMPILAN) ===================
-// =================================================================
 $currentAppHost = preg_replace('/:\d+$/', '', ($_SERVER['HTTP_HOST'] ?? ''));
 
 $db = new Database(DB_HOST, DB_USER, DB_PASS, DB_NAME);
@@ -49,7 +34,7 @@ if (!$storedLicenseVerification['status']) {
     header('Location: /license');
     exit();
 }
-// Variabel untuk menampung data, diinisialisasi untuk kedua peran
+
 $subdomains = [];
 $subdomainCount = 0;
 $managedDomainsInDb = [];
@@ -60,8 +45,7 @@ unset($_SESSION['status_message'], $_SESSION['status_type']);
 
 
 if ($view === 'admin' && $isAdmin) {
-    // --- LOGIKA KHUSUS ADMIN ---
-    // Pengecekan lisensi (diambil dari admin.php)
+    
     $currentAppHost = preg_replace('/:\d+$/', '', ($_SERVER['HTTP_HOST'] ?? ''));
     $licenseManager = new LicenseManager(LICENSE_SERVER_API_URL, $currentAppHost, $db);
     $storedLicenseVerification = $licenseManager->getAndVerifyStoredLicense();
@@ -72,10 +56,8 @@ if ($view === 'admin' && $isAdmin) {
         exit();
     }
     
-    // Mengambil semua domain dasar (dari admin.php)
     $managedDomainsInDb = $db->fetchAll("SELECT * FROM managed_domains ORDER BY domain_name ASC");
     
-    // Mengambil semua record dari Cloudflare untuk setiap domain dasar (dari admin.php)
     if (!empty($managedDomainsInDb)) {
         foreach ($managedDomainsInDb as $baseDomain) {
             $baseDomainKey = $baseDomain['domain_name'];
@@ -100,8 +82,7 @@ if ($view === 'admin' && $isAdmin) {
         }
     }
 } else {
-    // --- LOGIKA KHUSUS USER ---
-    // Ambil semua subdomain milik pengguna yang sedang login (dari dashboard.php)
+    
     $user_id = $_SESSION['user_id'];
     $sql = "SELECT id, cloudflare_record_id, record_name, record_type, zone_id, created_at FROM user_subdomain_records WHERE user_id = ? ORDER BY created_at DESC";
     $subdomains = $db->fetchAll($sql, [$user_id]);
@@ -159,7 +140,7 @@ if ($view === 'admin' && $isAdmin) {
                  
                  <span class="text-sm text-gray-400">|</span>
                  <span class="text-sm font-medium text-gray-800">Halo, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
-                 <a href="/logout.php" class="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700">
+                 <a href="/logout" class="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700">
                     <i class="fa-solid fa-arrow-right-from-bracket -ml-1 mr-2 h-5 w-5"></i> Logout
                  </a>
             </div>
@@ -411,7 +392,6 @@ if ($view === 'admin' && $isAdmin) {
 
 
 <script>
-// Fungsi Toast Notifikasi Global
 function showToast(message, type = 'info', duration = 4000) {
     const toastContainer = document.getElementById('toast-container');
     const toast = document.createElement('div');
@@ -427,7 +407,7 @@ function showToast(message, type = 'info', duration = 4000) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    // --- Skrip Global (berlaku untuk kedua tampilan) ---
+
     const hamburgerButton = document.getElementById('hamburger-button');
     const mobileMenu = document.getElementById('mobile-menu');
     const iconOpen = document.getElementById('hamburger-icon-open');
@@ -442,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     <?php if ($view === 'admin' && $isAdmin): ?>
-    // --- Skrip KHUSUS TAMPILAN ADMIN ---
+    
     const modal = document.getElementById('edit-modal');
     if(modal) {
         const modalForm = document.getElementById('edit-modal-form');
@@ -504,7 +484,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     <?php else: ?>
-    // --- Skrip KHUSUS TAMPILAN USER ---
+    
     const modal = document.getElementById('delete-modal');
     if (modal) {
         const cancelBtn = document.getElementById('cancel-delete');
@@ -525,7 +505,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     <?php endif; ?>
 
-    // Tampilkan notifikasi dari session jika ada
     <?php
     $sessionMessage = $_SESSION['status_message_toast'] ?? null;
     $sessionType = $_SESSION['status_type_toast'] ?? 'info';
