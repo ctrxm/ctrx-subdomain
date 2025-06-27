@@ -1,5 +1,5 @@
 <?php
-// register.php
+
 require_once __DIR__ . '/autoload.php';
 require_once __DIR__ . '/src/config.php';
 require_once __DIR__ . '/src/session_manager.php';
@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['status_message'] = 'Konfirmasi password tidak cocok.';
         $_SESSION['status_type'] = 'error';
     } else {
-        // PERBAIKAN: Menggunakan metode fetch() yang benar
+        
         $check_sql = "SELECT id FROM users WHERE email = ?";
         $existing_user = $db->fetch($check_sql, [$email]);
 
@@ -43,7 +43,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $hashed_password = password_hash($password, PASSWORD_BCRYPT);
             $insert_sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
             
-            // Metode execute() sudah benar
             $success = $db->execute($insert_sql, [$name, $email, $hashed_password]);
 
             if ($success) {
@@ -116,9 +115,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 </div>
 <script>
-    // Script notifikasi/toast sama seperti di create.php
+    
     function showToast(message, type = 'info') {
-        // ... (Anda bisa copy-paste fungsi showToast dari create.php ke sini)
+        
     }
     <?php if (isset($_SESSION['status_message'])): ?>
         showToast('<?php echo addslashes($_SESSION['status_message']); ?>', '<?php echo addslashes($_SESSION['status_type']); ?>');
