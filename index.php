@@ -67,7 +67,7 @@ $isAdminMode = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true;
                     <a href="#features" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900">Fitur</a>
                     <a href="#faq" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900">FAQ</a>
                     <?php if ($isAdminMode): ?>
-                        <a href="/admin" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
+                        <a href="/dashboard?view=admin" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
                             <i class="fa-solid fa-user-shield -ml-1 mr-2 h-5 w-5"></i> Admin Panel
                         </a>
                     <?php else: ?>
@@ -89,7 +89,7 @@ $isAdminMode = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true;
                 <a href="#features" class="mobile-menu-link block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700">Fitur</a>
                 <a href="#faq" class="mobile-menu-link block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700">FAQ</a>
                  <?php if ($isAdminMode): ?>
-                    <a href="/admin" class="mobile-menu-link block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700">Admin Panel</a>
+                    <a href="/dashboard?view=admin" class="mobile-menu-link block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700">Admin Panel</a>
                 <?php else: ?>
                     <a href="/login" class="mobile-menu-link block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700">Login Admin</a>
                 <?php endif; ?>
