@@ -92,7 +92,7 @@ if ($licenseData) {
                     </div>
                 </div>
                 <div class="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
-                    <a href="/admin" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-700">Admin Dashboard</a>
+                    <a href="/dashboard?view=admin" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-700">Admin Dashboard</a>
                     <a href="/create" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-700">Buat Subdomain</a>
                     <a href="/logout" class="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700">
                         <i class="fa-solid fa-arrow-right-from-bracket -ml-1 mr-2 h-5 w-5"></i> Logout
@@ -110,7 +110,7 @@ if ($licenseData) {
 
         <div class="sm:hidden hidden" id="mobile-menu">
             <div class="space-y-1 pb-3 pt-2">
-                <a href="/admin" class="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700">Admin Dashboard</a>
+                <a href="/dashboard?view=admin" class="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700">Admin Dashboard</a>
                 <a href="/license_details" class="block border-l-4 border-indigo-500 bg-indigo-50 py-2 pl-3 pr-4 text-base font-medium text-indigo-700">Detail Lisensi</a>
                 <a href="/create" class="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700">Buat Subdomain</a>
             </div>
