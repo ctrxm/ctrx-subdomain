@@ -1,7 +1,4 @@
 <?php
-// =====================================================================
-// ============== FILE PROSES FINAL (LENGKAP & TIDAK DIPOTONG) =========
-// =====================================================================
 
 require_once __DIR__ . '/autoload.php';
 require_once __DIR__ . '/src/config.php';
@@ -29,36 +26,23 @@ function send_response($status, $message, $redirectUrl, $data = []) {
     exit();
 }
 
-// =================================================================
-// ================== PERSIAPAN & VALIDASI AWAL ====================
-// =================================================================
-
-// Inisialisasi wajib
 $db = new Database(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 $telegramBot = new TelegramBot(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID);
 
-// Validasi request method harus POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: /index.php');
+    header('Location: /index');
     exit();
 }
 
-// Validasi lisensi untuk semua aksi
 $licenseManager = new LicenseManager(LICENSE_SERVER_API_URL, ($_SERVER['HTTP_HOST'] ?? ''), $db);
 if (!$licenseManager->getAndVerifyStoredLicense()['status']) {
     send_response('error', 'Lisensi tidak valid atau tidak ditemukan.', '/license.php');
 }
 
-// Ambil aksi utama dari form
 $action = filter_input(INPUT_POST, 'action', FILTER_SANITIZE_SPECIAL_CHARS);
-
-// =================================================================
-// ============== LOGIKA UTAMA BERDASARKAN AKSI ====================
-// =================================================================
 
 switch ($action) {
 
-    // --- AKSI PENGGUNA BIASA ---
     case 'add':
         $redirectUrl = '/create';
         try {
@@ -131,8 +115,7 @@ switch ($action) {
         }
         break;
 
-    // --- AKSI KHUSUS DARI ADMIN PANEL ---
-    case 'delete': // Hapus Subdomain dari Admin Panel
+    case 'delete':
         $redirectUrl = '/dashboard?view=admin';
         try {
             if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) throw new Exception('Akses ditolak.');
@@ -160,7 +143,7 @@ switch ($action) {
         }
         break;
 
-    case 'domain_action': // Aksi untuk Domain Dasar (Tambah/Hapus)
+    case 'domain_action':
         $redirectUrl = '/dashboard?view=admin';
         try {
             if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) throw new Exception('Akses ditolak.');
@@ -200,7 +183,6 @@ switch ($action) {
         }
         break;
 
-    // --- Aksi Default Jika Tidak Dikenali ---
     default:
         $fallbackUrl = isset($_SESSION['user_id']) ? '/dashboard.php' : '/login.php';
         send_response('error', "Aksi '{$action}' tidak dikenal.", $fallbackUrl);
