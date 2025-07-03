@@ -1,4 +1,4 @@
-# CTRX SUBDOMAIN V1.4.1 - BY CTRX CORP
+# CTRX SUBDOMAIN V1.4.2 - BY CTRX CORP
 
 Selamat datang di **CTRX SUBDOMAIN v1.4.1** — solusi cepat dan otomatis untuk pembuatan subdomain website kamu!
 
