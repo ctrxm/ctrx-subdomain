@@ -10,7 +10,11 @@ Sistem ini dibangun dengan **CodeIgniter 4** dan teknologi otomatisasi terkini, 
 
 ---
 
-## Fitur Unggulan
+## INFORMASI UPDATE
+Changelog Update V1.4.2
+- Update Tema Installer dan Form serta fungsi upload .sql otomatis
+- Fix Database Connection Failed
+- Fix bug di beberapa kode
 
 ### Untuk Pengguna
 - Landing page yang user friendly  
