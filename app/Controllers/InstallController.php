@@ -38,57 +38,98 @@ class InstallController extends BaseController
     }
 
     public function process()
-    {
-        $dbHost = $this->request->getPost('db_host');
-        $dbName = $this->request->getPost('db_name');
-        $dbUser = $this->request->getPost('db_user');
-        $dbPass = $this->request->getPost('db_pass');
-        $licenseKey = $this->request->getPost('license_key');
-        $baseURL = $this->request->getPost('base_url');
+{
+    $dbHost = $this->request->getPost('db_host');
+    $dbName = $this->request->getPost('db_name');
+    $dbUser = $this->request->getPost('db_user');
+    $dbPass = $this->request->getPost('db_pass');
+    $licenseKey = $this->request->getPost('license_key');
+    $baseURL = $this->request->getPost('base_url');
 
-        // Auto deteksi baseURL jika kosong
-        if (empty($baseURL)) {
-            $baseURL = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") .
-                "://" . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
-        }
+    // Auto deteksi baseURL jika kosong
+    if (empty($baseURL)) {
+        $baseURL = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") .
+            "://" . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
+    }
 
-        $env = ROOTPATH . '.env';
-        $envContent = file_exists($env) ? file_get_contents($env) : '';
+    // 💥 Tambahan: Import SQL jika ada file terupload
+    $sqlFile = $this->request->getFile('sql_file');
 
-        $newEnv = [
-            'app.baseURL'               => $baseURL,
-            'database.default.hostname' => $dbHost,
-            'database.default.database' => $dbName,
-            'database.default.username' => $dbUser,
-            'database.default.password' => $dbPass,
-            'license.apiKey'            => $licenseKey,
-        ];
+if ($sqlFile && $sqlFile->isValid()) {
+    if ($sqlFile->getSize() > 3 * 1024 * 1024) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'File SQL terlalu besar. Maksimal 3MB.'
+        ]);
+    }
 
-        foreach ($newEnv as $key => $val) {
-            $pattern = "/^$key\s*=.*$/m";
-            $line = "$key = \"$val\"";
-            if (preg_match($pattern, $envContent)) {
-                $envContent = preg_replace($pattern, $line, $envContent);
-            } else {
-                $envContent .= "\n$line";
+    if ($sqlFile->getClientExtension() !== 'sql') {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'File harus berekstensi .sql'
+        ]);
+    }
+
+    try {
+        $sqlContent = file_get_contents($sqlFile->getTempName());
+        $queries = array_filter(array_map('trim', explode(';', $sqlContent)));
+
+        $pdo = new \PDO("mysql:host=$dbHost;dbname=$dbName", $dbUser, $dbPass);
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
+        foreach ($queries as $query) {
+            if (!empty($query)) {
+                $pdo->exec($query);
             }
         }
-
-        if (file_put_contents($env, $envContent) === false) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Gagal menyimpan file konfigurasi .env']);
-        }
-
-        if (file_put_contents(WRITEPATH . '.installed', 'OK') === false) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Gagal menandai instalasi selesai']);
-        }
-
-        // Comment auto-hapus installer agar tidak langsung terhapus
-        /*
-       // @unlink(APPPATH . 'Controllers/InstallController.php');
-       // @unlink(APPPATH . 'Views/install/index.php');
-        */
-
-        return $this->response->setJSON(['success' => true]);
+    } catch (\Throwable $e) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Gagal import SQL: ' . $e->getMessage()
+        ]);
     }
 }
 
+    // 🔧 Ubah file env (kode lama, jangan diubah)
+    $sourcePath = ROOTPATH . 'env';
+    $envContent = file_exists($sourcePath) ? file_get_contents($sourcePath) : '';
+
+    $newEnv = [
+        'app.baseURL'               => $baseURL,
+        'database.default.hostname' => $dbHost,
+        'database.default.database' => $dbName,
+        'database.default.username' => $dbUser,
+        'database.default.password' => $dbPass,
+        'license.apiKey'            => $licenseKey,
+    ];
+
+    foreach ($newEnv as $key => $val) {
+        $pattern = "/^#?$key\s*=.*/m";
+        $line = "$key = \"$val\"";
+        if (preg_match($pattern, $envContent)) {
+            $envContent = preg_replace($pattern, $line, $envContent);
+        } else {
+            $envContent .= "\n$line";
+        }
+    }
+
+    if (file_put_contents($sourcePath, $envContent) === false) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Gagal menyimpan file konfigurasi env.']);
+    }
+
+    $destinationPath = ROOTPATH . '.env';
+    if (file_exists($destinationPath)) {
+        unlink($destinationPath);
+    }
+
+    if (!rename($sourcePath, $destinationPath)) {
+        return $this->response->setJSON(['success' => false, 'message' => 'KRUSIAL: Gagal mengubah nama file dari env menjadi .env.']);
+    }
+
+    if (file_put_contents(WRITEPATH . '.installed', 'OK') === false) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Gagal menandai instalasi selesai.']);
+    }
+
+    return $this->response->setJSON(['success' => true]);
+}
+}

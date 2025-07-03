@@ -13,6 +13,14 @@
     
     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
         <h2 class="text-xl font-semibold mb-4">Buat Subdomain Baru</h2>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+    <h2 class="text-xl font-semibold mb-2">Buat Subdomain Baru</h2>
+
+    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        Kuota Anda: <strong><?= $current_sub_count ?></strong> dari <strong><?= $max_subdomains ?></strong> telah digunakan.
+    </div>
+
+    <form action="<?= site_url('dashboard/subdomain/create') ?>" method="post" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
         <form action="<?= site_url('dashboard/subdomain/create') ?>" method="post" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
             <?= csrf_field() ?>
             
@@ -74,12 +82,15 @@
                             </th>
                             <td class="px-6 py-4"><span class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300"><?= esc($sub['type']) ?></span></td>
                             <td class="px-6 py-4 break-all"><?= esc($sub['content']) ?></td>
-                            <td class="px-6 py-4">
-                                <form action="<?= site_url('dashboard/subdomain/delete/' . $sub['id']) ?>" method="post" onsubmit="return confirm('Apakah Anda yakin ingin menghapus subdomain ini?');">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="font-medium text-red-600 dark:text-red-500 hover:underline">Hapus</button>
-                                 </form>
-                            </td>
+                            <td class="px-6 py-4 flex items-center space-x-3">
+    <a href="<?= site_url('dashboard/subdomain/edit/' . $sub['id']) ?>" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
+    
+    <form action="<?= site_url('dashboard/subdomain/delete/' . $sub['id']) ?>" method="post" onsubmit="return confirm('Apakah Anda yakin ingin menghapus subdomain ini?');">
+        <?= csrf_field() ?>
+        <button type="submit" class="font-medium text-red-600 dark:text-red-500 hover:underline">Hapus</button>
+    </form>
+</td>
+
                         </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>

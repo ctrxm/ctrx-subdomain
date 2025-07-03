@@ -16,7 +16,20 @@ class App extends BaseConfig
      *
      * E.g., http://example.com/
      */
-    public string $baseURL = 'https://ctrxl.id/';
+public string $baseURL = '';
+
+public function __construct()
+{
+    parent::__construct();
+
+    if ($this->baseURL === '') {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $path   = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+
+        $this->baseURL = $scheme . '://' . $host . $path . '/';
+    }
+}
 
     /**
      * Allowed Hostnames in the Site URL other than the hostname in the baseURL.

@@ -1,0 +1,86 @@
+<?php
+
+namespace Config;
+
+use CodeIgniter\Config\Filters as BaseFilters;
+use CodeIgniter\Filters\DebugToolbar;
+use CodeIgniter\Filters\ForceHTTPS;
+use CodeIgniter\Filters\Honeypot;
+use CodeIgniter\Filters\InvalidChars;
+use CodeIgniter\Filters\SecureHeaders;
+use CodeIgniter\Shield\Filters\SessionAuth;
+use App\Filters\AdminFilter;
+use App\Filters\LicenseFilter; // Ganti jika nama file Anda LicenseCheck.php
+
+class Filters extends BaseFilters
+{
+    /**
+     * Alias Anda sudah benar, 'skipdb' sudah dihapus sesuai permintaan.
+     */
+    public array $aliases = [
+        'csrf'          => \CodeIgniter\Filters\CSRF::class,
+        'toolbar'       => DebugToolbar::class,
+        'honeypot'      => Honeypot::class,
+        'invalidchars'  => InvalidChars::class,
+        'secureheaders' => SecureHeaders::class,
+        'forcehttps'    => ForceHTTPS::class,
+        'session'       => SessionAuth::class,
+        'auth'          => SessionAuth::class,
+        'admin'         => AdminFilter::class,
+        'license'       => \App\Filters\LicenseFilter::class,
+    ];
+
+    /**
+     * Array ini sengaja hanya berisi filter 'after' pada awalnya.
+     * Filter 'before' akan diisi secara dinamis di dalam constructor.
+     */
+    public array $globals = [
+        'before' => [
+            'license' => ['except' => [ 'activate*', 'api', 'install', 'install/process', 'install/testdb', 'invalid']],
+        ],
+        'after' => [
+            'toolbar',
+            'honeypot',
+            'secureheaders',
+        ],
+    ];
+
+    public array $methods = [];
+    public array $filters = [];
+    public array $required = [];
+    
+    /**
+     * Constructor ini adalah kunci dari solusi kita.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Cek apakah file penanda instalasi sudah ada
+        if (file_exists(WRITEPATH . '.installed')) {
+            // JIKA SUDAH DI-INSTALL, terapkan konfigurasi filter Anda yang spesifik
+            $this->globals['before'] = [
+                'honeypot',
+                'csrf' => ['except' => ['install/testdb']],
+                'license' => [
+                    'except' => [
+                        '/',
+                        'login', 'logout', 'register', 'forgot',
+                        'activate', 'activate/*',
+                        'invalid',
+                        'install', 'install/process',
+                        'api/*' // Contoh jika Anda punya API
+                    ]
+                ],
+                'session' // Jalankan session setelah filter lain
+            ];
+
+            // Logika untuk production (forcehttps)
+            if (ENVIRONMENT === 'production') {
+                $this->globals['before'][] = 'forcehttps';
+            }
+        }
+        // JIKA BELUM DI-INSTALL, array $globals['before'] akan tetap kosong,
+        // sehingga tidak ada error database.
+    }
+}

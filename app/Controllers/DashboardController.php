@@ -6,6 +6,8 @@ use App\Controllers\BaseController;
 use App\Libraries\CloudflareService;
 use App\Models\DomainModel;
 use App\Models\SubdomainModel;
+use App\Models\SettingModel;
+
 
 class DashboardController extends BaseController
 {
@@ -13,23 +15,40 @@ class DashboardController extends BaseController
      * Menampilkan halaman utama dashboard pengguna.
      */
     public function index()
-    {
-        $domainModel    = new DomainModel();
-        $subdomainModel = new SubdomainModel();
-        
-        $data = [
-            'domains'    => $domainModel->where('is_active', true)->findAll(),
-            'subdomains' => $subdomainModel->getSubdomainsByUser(auth()->id()),
-        ];
-        
-        return view('dashboard/index', $data);
-    }
+{
+    $domainModel    = new DomainModel();
+    $subdomainModel = new SubdomainModel();
+    $settingModel   = new SettingModel(); // Tambahkan ini
+
+    $userSubdomains = $subdomainModel->getSubdomainsByUser(auth()->id());
+
+    $data = [
+        'domains'             => $domainModel->where('is_active', true)->findAll(),
+        'subdomains'          => $userSubdomains,
+        'current_sub_count'   => count($userSubdomains), // Hitung subdomain saat ini
+        'max_subdomains'      => $settingModel->find('max_subdomains_per_user')['value'] ?? '10', // Ambil batas
+    ];
+
+    return view('dashboard/index', $data);
+}
+
 
     /**
      * Memproses pembuatan subdomain baru.
      */
-    public function createSubdomain()
-    {
+   public function createSubdomain()
+{
+    // --- PENGECEKAN KUOTA ---
+    $subdomainModel = new SubdomainModel();
+    $settingModel   = new SettingModel();
+
+    $currentCount = $subdomainModel->where('user_id', auth()->id())->countAllResults();
+    $maxAllowed   = (int) ($settingModel->find('max_subdomains_per_user')['value'] ?? 10);
+
+    if ($currentCount >= $maxAllowed) {
+        return redirect()->back()->withInput()->with('error', 'Anda telah mencapai batas maksimal pembuatan subdomain.');
+    }
+    // --- AKHIR PENGECEKAN KUOTA ---
         // 1. Dapatkan tipe record dari form
         $type = $this->request->getPost('type');
         
@@ -133,4 +152,93 @@ class DashboardController extends BaseController
         $subdomainModel->delete($subdomainId);
         return redirect()->to('/dashboard')->with('message', 'Subdomain berhasil dihapus dari database (record di Cloudflare sudah tidak ada).');
     }
+
+
+          /**
+     * Menampilkan halaman form untuk mengedit subdomain.
+     */
+    public function edit(int $subdomainId)
+    {
+        $subdomainModel = new SubdomainModel();
+        
+        // Ambil data subdomain, gabungkan dengan nama domain dasarnya
+        $subdomain = $subdomainModel
+            ->select('subdomains.*, domains.domain_name')
+            ->join('domains', 'domains.id = subdomains.domain_id')
+            ->where('subdomains.id', $subdomainId)
+            ->where('subdomains.user_id', auth()->id()) // Keamanan: pastikan user hanya bisa edit miliknya
+            ->first();
+
+        if (!$subdomain) {
+            return redirect()->to('/dashboard')->with('error', 'Subdomain tidak ditemukan.');
+        }
+
+        return view('dashboard/subdomain/edit', ['subdomain' => $subdomain]);
+    }
+
+    /**
+     * Memproses dan menyimpan perubahan subdomain.
+     */
+    public function update(int $subdomainId)
+    {
+        $subdomainModel = new SubdomainModel();
+        
+        // Ambil data subdomain yang akan diubah
+        $subdomain = $subdomainModel
+            ->where('id', $subdomainId)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if (!$subdomain) {
+            return redirect()->to('/dashboard')->with('error', 'Aksi tidak diizinkan.');
+        }
+
+        // --- Logika Validasi (sama seperti saat membuat) ---
+        $type = $this->request->getPost('type');
+        $rules = ['type' => 'required|in_list[A,CNAME]'];
+
+        if ($type === 'A') {
+            $rules['content'] = 'required|valid_ip[ipv4]';
+        } elseif ($type === 'CNAME') {
+            $rules['content'] = 'required|regex_match[/^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/]';
+        }
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        // --- Panggil Cloudflare API untuk UPDATE (bukan create) ---
+        // Kita butuh method baru di CloudflareService untuk ini
+        // Untuk sekarang, kita akan hapus yang lama dan buat yang baru
+        // (Ini adalah cara paling sederhana & andal di API Cloudflare)
+
+        $domainModel = new DomainModel();
+        $domain = $domainModel->find($subdomain['domain_id']);
+        $content = $this->request->getPost('content');
+        $fullDomain = $subdomain['name'] . '.' . $domain['domain_name'];
+
+        $cloudflare = new CloudflareService();
+        
+        // 1. Hapus record lama di Cloudflare
+        $cloudflare->deleteDnsRecord($domain['zone_id'], $subdomain['cloudflare_record_id']);
+        
+        // 2. Buat record baru dengan data yang telah diubah
+        $result = $cloudflare->createDnsRecord($domain['zone_id'], $type, $fullDomain, $content, true);
+
+        // --- Proses Hasil ---
+        if ($result && isset($result->success) && $result->success === true) {
+            // Update data di database lokal kita
+            $subdomainModel->update($subdomainId, [
+                'cloudflare_record_id' => $result->result->id,
+                'type'                 => $type,
+                'content'              => $content,
+            ]);
+            return redirect()->to('/dashboard')->with('message', 'Subdomain berhasil diperbarui!');
+        } else {
+            // Tangani jika pembuatan record baru gagal
+            $errorMessage = $result->errors[0]->message ?? 'Gagal memperbarui record di Cloudflare.';
+            return redirect()->back()->withInput()->with('error', $errorMessage);
+        }
+    }
+
 }

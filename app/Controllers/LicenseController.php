@@ -2,16 +2,14 @@
 
 namespace App\Controllers;
 
-use App\Libraries\LicenseManager; // Pastikan library ini ada
+use App\Libraries\LicenseManager;
 
 class LicenseController extends BaseController
 {
-    /**
-     * Menampilkan halaman form aktivasi lisensi.
-     */
+
     public function activate()
     {
-        // Jika sudah ada lisensi valid, arahkan ke dashboard
+
         $license = new LicenseManager();
         if ($license->iall()) {
             return redirect()->to('dashboard');
@@ -20,9 +18,6 @@ class LicenseController extends BaseController
         return view('license/activate_view');
     }
 
-    /**
-     * Memproses kunci lisensi yang dikirim dari form.
-     */
     public function processActivation()
     {
         $licenseKey = $this->request->getPost('license_key');
@@ -31,11 +26,11 @@ class LicenseController extends BaseController
         }
 
         $license = new LicenseManager();
-        $validation = $license->_v_l_s($licenseKey); // Memvalidasi ke server
+        $validation = $license->_v_l_s($licenseKey);
 
         if (isset($validation->status) && $validation->status === 'VALID') {
-            $license->_s_l_d($licenseKey, $validation); // Simpan lisensi lokal
-            $license->remove_lockdown(); // Hapus file lockdown jika ada
+            $license->_s_l_d($licenseKey, $validation);
+            $license->remove_lockdown();
             return redirect()->to('dashboard')->with('message', 'Lisensi berhasil diaktifkan!');
         }
         
@@ -43,14 +38,18 @@ class LicenseController extends BaseController
         return redirect()->back()->with('error', $errorMessage);
     }
 
-    /**
-     * Menampilkan halaman jika lisensi tidak valid.
-     */
-    public function invalid()
-    {
-        // Tampilkan pesan error yang dikirim lewat URL
-        $data['reason'] = $this->request->getGet('reason') ?? 'Lisensi tidak valid atau telah kedaluwarsa.';
-        return view('license/invalid_view', $data);
-    }
+
+public function invalid()
+{
+    // Ambil pesan 'reason' dari query string URL.
+    $reason = $this->request->getGet('reason');
+
+    // Jika tidak ada pesan, gunakan pesan default.
+    $data['reason'] = !empty($reason) 
+        ? urldecode($reason) // Mengembalikan spasi, dll. ke bentuk normal
+        : 'Lisensi Anda tidak valid atau telah kedaluwarsa.';
+
+    return view('license/invalid_view', $data);
+}
 }
 
