@@ -1,18 +1,18 @@
-CI_ENVIRONMENT = development
+CI_ENVIRONMENT = production
 app.debug = false
 #--------------------------------------------------------------------
 # APP
 #--------------------------------------------------------------------
-app.baseURL = 
+app.baseURL = "https://demo.ctrxl.id/"
 app.forceGlobalSecureRequests = true
 
 #--------------------------------------------------------------------
 # DATABASE
 #--------------------------------------------------------------------
-database.default.hostname = 
-database.default.database = 
-database.default.username = 
-database.default.password = 
+database.default.hostname = "localhost"
+database.default.database = "tests"
+database.default.username = "tests"
+database.default.password = "hendra"
 database.default.DBDriver = MySQLi
 database.default.DBPrefix =
 database.default.port = 3306
@@ -21,7 +21,7 @@ database.default.port = 3306
 # DONT DELETE THIS, IF YOU DONT GET ERROR
 #--------------------------------------------------------------------
 license.apiUrl = 'https://api.ctrxl.id/api/v1/verify'
-license.apiKey = 
+license.apiKey = ""
 license.secretKey = 'ClGJVwi7bXCPeZ3P+XTQuvJhZ+en1xVr92No+GMcyQq+HVJQyhbfOyEGvw2V7NgA'
 
 #--------------------------------------------------------------------
