@@ -1,4 +1,4 @@
-# CTRX SUBDOMAIN V1.4.2 - BY CTRX CORP
+# CTRX SUBDOMAIN V1.4.3 - BY CTRX CORP
 
 Selamat datang di **CTRX SUBDOMAIN v1.4.3** — solusi cepat dan otomatis untuk pembuatan subdomain website kamu!
 
@@ -11,7 +11,7 @@ Sistem ini dibangun dengan **CodeIgniter 4** dan teknologi otomatisasi terkini, 
 ---
 
 ## INFORMASI UPDATE
-Changelog Update V1.4.2
+Changelog Update V1.4.3
 - Update Tema Installer
 - Perbaikan bug di beberapa kode
 - Perbaikan error Route 404
