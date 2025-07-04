@@ -3,16 +3,16 @@ app.debug = false
 #--------------------------------------------------------------------
 # APP
 #--------------------------------------------------------------------
-app.baseURL = "https://demo.ctrxl.id/"
+app.baseURL = 
 app.forceGlobalSecureRequests = true
 
 #--------------------------------------------------------------------
 # DATABASE
 #--------------------------------------------------------------------
 database.default.hostname = "localhost"
-database.default.database = "tests"
-database.default.username = "tests"
-database.default.password = "hendra"
+database.default.database = 
+database.default.username = 
+database.default.password = 
 database.default.DBDriver = MySQLi
 database.default.DBPrefix =
 database.default.port = 3306
